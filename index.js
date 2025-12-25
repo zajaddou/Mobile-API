@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
-// تأكد من أن ملف base.js يصدر الدالة SQL بشكل صحيح
 import { check_user } from "./functions/base.js"; 
 
 import login from "./routers/login.js";
@@ -28,8 +27,9 @@ const io = new Server(httpServer, {
         methods: ["GET", "POST"]
     },
     allowEIO3: true,
-    pingTimeout: 60000,
-    pingInterval: 25000
+    pingTimeout: 30000,
+    pingInterval: 25000,
+    transports: ['websocket', 'polling']
 });
 
 app.use(cors());
@@ -42,57 +42,57 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use((req, res, next) => {
-    res.on('finish', () => {
-    });
-    next();
-});
-
-let onlineUsers = 0;
+const connectedDevices = new Map();
 
 io.on("connection", (socket) => {
-    let name;
-    let connect = false;
+    let currentDeviceID = null;
+    let currentName = null;
+    let isRegistered = false;
 
     socket.emit("get_device_info");
 
-    socket.on("device_info", async (object) => {
-        
-        if (!object) return;
+    socket.on("device_info", (object) => {
+        if (!object || isRegistered) return;
 
         let data = object;
         if (typeof object === 'string') {
             try {
                 data = JSON.parse(object);
             } catch (e) {
-                console.log("Error parsing JSON");
                 return;
             }
         }
 
-        await check_user(data, socket.id);
+        currentName = data.name;
+        currentDeviceID = data.device_id || data.name; 
 
-        name = data.name || "Unknown";
+        if (connectedDevices.has(currentDeviceID)) {
+            const oldSocketId = connectedDevices.get(currentDeviceID);
+            if (oldSocketId !== socket.id) {
+                const oldSocket = io.sockets.sockets.get(oldSocketId);
+                if (oldSocket) {
+                    oldSocket.disconnect(true);
+                }
+            }
+        }
 
-        if (connect) return;
+        connectedDevices.set(currentDeviceID, socket.id);
+        isRegistered = true;
 
-        connect = true;
+        io.emit("online_count", connectedDevices.size);
 
-        onlineUsers++;
+        console.log(`${RESET} [ ${GREEN}Socket${RESET} ] ID: ${socket.id} | Device: ${CYAN}${currentName}${RESET} | Online : ${connectedDevices.size}`);
 
-        console.log(`${RESET} [ ${GREEN}Socket${RESET} ] ID: ${socket.id} | Device: ${CYAN}${name}${RESET} | Online : ${onlineUsers}`);
-
-        console.log(data);
-
-        io.emit("online_count", onlineUsers);
-
+        check_user(data, socket.id).catch(err => console.error(err));
     });
 
     socket.on("disconnect", () => {
-        onlineUsers--;
-        if (name) console.log(`${RESET} [ ${RED}Socket${RESET} ] ID: ${socket.id} | Device: ${CYAN}${name}${RESET} | Online : ${onlineUsers}`);
-        connect = false;
-        io.emit("online_count", onlineUsers);
+        if (currentDeviceID && connectedDevices.get(currentDeviceID) === socket.id) {
+            connectedDevices.delete(currentDeviceID);
+            io.emit("online_count", connectedDevices.size);
+            
+            console.log(`${RESET} [ ${RED}Socket${RESET} ] ID: ${socket.id} | Device: ${CYAN}${currentName || "Unknown"}${RESET} | Online : ${connectedDevices.size}`);
+        }
     });
 });
 
