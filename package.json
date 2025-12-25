@@ -1,6 +1,48 @@
 {
+  "name": "Mobile APP",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx nodemon --exec 'clear && node' index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zajaddou/store-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zajaddou/store-api/issues"
+  },
+  "homepage": "https://github.com/zajaddou/store-api#readme",
+  "description": "",
   "dependencies": {
-    "express": "^5.2.1",
-    "npx": "^10.2.2"
-  }
+    "argon2": "^0.43.0",
+    "axios": "^1.10.0",
+    "cors": "*",
+    "cros": "*",
+    "crypto-js": "^4.2.0",
+    "discord.js": "*",
+    "dotenv": "*",
+    "express": "*",
+    "express-rate-limit": "^7.5.0",
+    "imap-simple": "^1.6.3",
+    "js-md5": "*",
+    "jsonwebtoken": "*",
+    "mailparser": "^3.7.3",
+    "multer": "^2.0.0",
+    "mysql": "*",
+    "mysql2": "*",
+    "node-cron": "^4.1.0",
+    "node-imap": "^0.9.6",
+    "nodemon": "*",
+    "npx": "^3.0.0",
+    "pm2": "*",
+    "puppeteer": "*",
+    "qrcode-terminal": "*",
+    "sanitize-filename": "*",
+    "validator": "*",
+    "whatsapp-web.js": "*"
+  },
+  "type": "module"
 }
