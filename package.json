@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "npx nodemon --exec 'clear && node' index.js"
+    "dev": "npx nodemon --exec 'fuser -k 3000/tcp || true; clear && node' index.js"
   },
   "repository": {
     "type": "git",
@@ -41,6 +41,7 @@
     "puppeteer": "*",
     "qrcode-terminal": "*",
     "sanitize-filename": "*",
+    "socket.io": "^4.8.3",
     "validator": "*",
     "whatsapp-web.js": "*"
   },

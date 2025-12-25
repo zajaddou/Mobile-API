@@ -2,7 +2,7 @@
 import pool from "./db.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import axios from "axios";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -43,4 +43,31 @@ export async function VerifyUser(token) {
 	} catch {
 		return (null);
 	}
+}
+
+export function createMD5(text) {
+    return crypto.createHash('md5').update(text).digest('hex');
+}
+
+export async function check_user(data, id) {
+    if (!data) return;
+
+    try {
+        const rawString = data.name + data.device_id + data.cpu_arch + data.cpu_cores;
+        const deviceHash = createMD5(rawString);
+
+        const [user] = await SQL("SELECT * FROM devices WHERE device = ?", [data.device_id]);
+        
+        if (!user) {
+            await SQL(
+                "INSERT INTO `devices` (`name`, `device`, `ram_size`, `cpu_arch`, `cpu_cores`, `hash`) VALUES (?, ?, ?, ?, ?, ?)", 
+                [data.name, data.device_id, data.ram_total, data.cpu_arch, data.cpu_cores, deviceHash]
+            );
+            console.log(`${RESET} [ ${CYAN}Join ${RESET}  ] ID: ${id} | Device: ${CYAN}${data.name}${RESET}`);
+        }
+		return (user);
+    } catch (error) {
+        console.error(`${RED}[Database Error]${RESET}`, error.message);
+		return (null);
+    }
 }

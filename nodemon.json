@@ -1,0 +1,7 @@
+{
+  "events": {
+    "restart": "fuser -k 3000/tcp || true",
+    "start": "fuser -k 3000/tcp || true"
+  },
+  "delay": "500"
+}

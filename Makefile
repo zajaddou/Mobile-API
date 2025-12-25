@@ -8,7 +8,7 @@ push:
 	-@clear
 
 kill:
-	@kill -9 $(shell lsof -t -i :3099 2>/dev/null) || echo "No process on port 3010"
+	@kill -9 $(shell lsof -t -i :3000 2>/dev/null) || echo "No process on port 3010"
 
 monitor:
 	htop
