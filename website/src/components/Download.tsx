@@ -1,6 +1,13 @@
 import { Download as DownloadIcon, Shield, CheckCircle } from 'lucide-react';
 
 export default function Download() {
+  
+  // --- دالة التحميل ---
+  const handleDownload = () => {
+    // هذا الرابط سيجعل المتصفح يبدأ التحميل فوراً
+    window.location.href = "https://api.robixe.com/download-app";
+  };
+
   return (
     <section id="download" className="py-24 bg-black relative">
       <div className="absolute inset-0 bg-gradient-to-t from-[#072B3C]/20 to-transparent"></div>
@@ -21,7 +28,11 @@ export default function Download() {
             </div>
 
             <div className="flex flex-col items-center gap-8">
-              <button className="group px-10 py-5 bg-white hover:bg-gray-100 text-[#072B3C] rounded-xl font-bold text-xl transition-all duration-300 flex items-center gap-3 shadow-2xl hover:scale-105">
+              {/* --- تم تعديل الزر هنا --- */}
+              <button 
+                onClick={handleDownload}
+                className="group px-10 py-5 bg-white hover:bg-gray-100 text-[#072B3C] rounded-xl font-bold text-xl transition-all duration-300 flex items-center gap-3 shadow-2xl hover:scale-105 cursor-pointer"
+              >
                 <DownloadIcon className="w-6 h-6" />
                 Download APK
                 <span className="text-sm font-normal opacity-75">(v1.0.0)</span>

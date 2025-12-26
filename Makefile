@@ -13,4 +13,7 @@ kill:
 monitor:
 	htop
 
+run:
+	@npm run dev
+
 phone: push run

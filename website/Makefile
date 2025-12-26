@@ -12,8 +12,8 @@ build:
 	@npm run build
 
 restart:
-	@echo "🔄 Restarting Server..."
-	@pm2 restart $(APP_NAME) || pm2 serve $(DIST_FOLDER) $(PORT) --name "$(APP_NAME)" --spa
+	@echo "🔄 Reloading Server..."
+	@pm2 reload $(APP_NAME) || pm2 serve $(DIST_FOLDER) $(PORT) --name "$(APP_NAME)" --spa
 	@pm2 save
 
 deploy: build restart

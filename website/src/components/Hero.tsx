@@ -83,9 +83,9 @@ export default function Hero() {
         </div>
 
         <div className="grid grid-cols-3 gap-6 sm:gap-8 max-w-2xl mx-auto mb-16">
-          <StatCounter end={1} label="Active Users" prefix="+" />
-          <StatCounter end={0} label="Earned Total" prefix="$" />
-          <StatCounter end={1} label="Countries" />
+          <StatCounter end={150} label="Active Users" prefix="+" />
+          <StatCounter end={2500} label="Earned Total" prefix="$" />
+          <StatCounter end={180} label="Countries" />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">

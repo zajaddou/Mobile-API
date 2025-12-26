@@ -9,6 +9,7 @@ import login from "./routers/login.js";
 import code from "./routers/code.js";
 import info from "./routers/info.js";
 import nuser from "./routers/nuser.js";
+import download from "./routers/download.js"
 
 const RESET = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -100,6 +101,7 @@ app.use("/", login);
 app.use("/", code);
 app.use("/", info);
 app.use("/", nuser);
+app.use("/", download);
 
 app.all("/", (req, res) => res.send("pong"));
 
