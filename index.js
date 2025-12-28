@@ -200,7 +200,4 @@ app.all("/target-stress", (req, res) => {
 app.all("/", (req, res) => res.send("Server online"));
 
 const PORT = process.env.PORT;
-
-httpServer.listen(PORT, () => {
-    console.log(`\n>> Server online <<\n`);
-});
+httpServer.listen(PORT, () => {});
